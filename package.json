@@ -5,7 +5,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "add_git_here"
+    "url": "https://github.com/Danimal4326/homebridge-ecoplug"
   },
   "keywords": [
     "homebridge-plugin",
