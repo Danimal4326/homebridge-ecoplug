@@ -42,7 +42,7 @@ EcoPlug.prototype._setOn = function (on, callback) {
     // Add random sequence num
     message.writeUInt16BE(Math.floor(Math.random() * 0xFFFF), 6);
 
-    this.log("Setting %s switch to %s", this.id, (on ? "ON" : "OFF"));
+    this.log("Setting %s switch with ID %s to %s", this.name, this.id, (on ? "ON" : "OFF"));
 
     if (on) {
         message.write('0101', 128, 2, 'hex');
