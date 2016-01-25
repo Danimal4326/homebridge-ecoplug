@@ -1,6 +1,6 @@
 {
   "name": "homebridge-ecoplug",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Homebridge plugin to control ECO Plugs by KAB",
   "license": "ISC",
   "repository": {
