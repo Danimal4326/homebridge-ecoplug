@@ -36,13 +36,12 @@ EcoPlug.prototype.getServices = function () {
 
 EcoPlug.prototype.setStatus = function (on, callback) {
 
-
     var message = this.createMessage('set', this.id, on);
     var retry_count = 3;
 
     this.sendMessage(message, retry_count, function (err, message) {
         if (!err) {
-            this.log("Setting %s switch with ID %s to %s", this.name, this.id, (on ? "ON" : "OFF"));
+            this.log("Setting %s switch with ID %s to: %s", this.name, this.id, (on ? "ON" : "OFF"));
         }
         callback(err, null);
     }.bind(this));
@@ -59,7 +58,7 @@ EcoPlug.prototype.getStatus = function (callback) {
     this.sendMessage(message, retry_count, function (err, message) {
         if (!err) {
             status = this.readState(message);
-            this.log("Status of %s switch with ID %s to %s", this.name, this.id, (status ? "ON" : "OFF"));
+            this.log("Status of %s switch with ID %s is: %s", this.name, this.id, (status ? "ON" : "OFF"));
         }
         callback(err, status);
     }.bind(this));
