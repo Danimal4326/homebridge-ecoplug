@@ -36,11 +36,14 @@ EcoPlug.prototype.getServices = function () {
 
 EcoPlug.prototype.setStatus = function (on, callback) {
 
-    this.log("Setting %s switch with ID %s to %s", this.name, this.id, (on ? "ON" : "OFF"));
 
     var message = this.createMessage('set', this.id, on);
+    var retry_count = 3;
 
-    this.sendMessage( message, function(err, message){
+    this.sendMessage( message, retry_count, function(err, message){
+        if (!err) {
+            this.log("Setting %s switch with ID %s to %s", this.name, this.id, (on ? "ON" : "OFF"));
+        }
         callback(err,null);
     }.bind(this));
 
@@ -51,16 +54,19 @@ EcoPlug.prototype.getStatus = function (callback) {
     var status = false;
     
     var message = this.createMessage('get', this.id);
+    var retry_count = 3;
     
-    this.sendMessage( message, function (err, message){
-        status = this.readState(message);
+    this.sendMessage( message, retry_count, function (err, message){
+        if (!err) {
+            status = this.readState(message);
+            this.log("Status of %s switch with ID %s to %s", this.name, this.id, (status ? "ON" : "OFF"));
+        }
         callback(err, status);
     }.bind(this));
     
 }
 
 EcoPlug.prototype.createMessage = function (command, id, state) {
-    var that = this;
     
     var bufferLength;
     var command1;
@@ -132,24 +138,33 @@ EcoPlug.prototype.createMessage = function (command, id, state) {
     return buffer;
 }
 
-EcoPlug.prototype.sendMessage = function (message, callback) {
+EcoPlug.prototype.sendMessage = function (message, retry_count, callback) {
 
     var socket = dgram.createSocket('udp4');
+    var timeout;
 
     socket.on('message', function (message) {
+        clearTimeout(timeout);
         socket.close();
         callback(null, message);
     }.bind(this));
 
-    socket.on('error', function (error) {
-        socket.close();
-        this.log("Error connection to %s switch with ID %s. Error Code = %s", this.name, this.id, error);
-        callback(true);
-    }.bind(this));
-    
-    // TODO: Check if there is a response from the plug and re-send message. If no reply, callback with error
     socket.send(message, 0, message.length, this.port, this.host, function (err, bytes) {
-        if (err) callback(err);
+        if (err) {
+            callback(err);
+        } else {
+            timeout = setTimeout(function() {
+                socket.close();
+                if (retry_count > 0) {
+                    this.log("Timeout connecting to %s - Retrying....", this.host);
+                    var cnt = retry_count - 1;
+                    this.sendMessage(message, cnt, callback);
+                } else {
+                    this.log("Timeout connecting to %s - Failing", this.host);
+                    callback(true);
+                }
+            }.bind(this), 500);
+        }
     }.bind(this));
 
 }
