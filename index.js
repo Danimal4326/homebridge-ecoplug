@@ -40,11 +40,11 @@ EcoPlug.prototype.setStatus = function (on, callback) {
     var message = this.createMessage('set', this.id, on);
     var retry_count = 3;
 
-    this.sendMessage( message, retry_count, function(err, message){
+    this.sendMessage(message, retry_count, function (err, message) {
         if (!err) {
             this.log("Setting %s switch with ID %s to %s", this.name, this.id, (on ? "ON" : "OFF"));
         }
-        callback(err,null);
+        callback(err, null);
     }.bind(this));
 
 }
@@ -52,32 +52,32 @@ EcoPlug.prototype.setStatus = function (on, callback) {
 EcoPlug.prototype.getStatus = function (callback) {
 
     var status = false;
-    
+
     var message = this.createMessage('get', this.id);
     var retry_count = 3;
-    
-    this.sendMessage( message, retry_count, function (err, message){
+
+    this.sendMessage(message, retry_count, function (err, message) {
         if (!err) {
             status = this.readState(message);
             this.log("Status of %s switch with ID %s to %s", this.name, this.id, (status ? "ON" : "OFF"));
         }
         callback(err, status);
     }.bind(this));
-    
+
 }
 
 EcoPlug.prototype.createMessage = function (command, id, state) {
-    
+
     var bufferLength;
     var command1;
     var command2;
     var new_state;
-        
+
     if (command == 'set') {
         bufferLength = 130;
         command1 = 0x16000500;
         command2 = 0x0200;
-        if(state) {
+        if (state) {
             new_state = 0x0101;
         } else {
             new_state = 0x0100;
@@ -91,7 +91,7 @@ EcoPlug.prototype.createMessage = function (command, id, state) {
     else {
         throw err;
     }
-    
+
     var buffer = new Buffer(bufferLength);
 
     buffer.fill(0);
@@ -123,7 +123,7 @@ EcoPlug.prototype.createMessage = function (command, id, state) {
     // Byte 112:115 - Something gets returned here during readback - not sure
     
     // Byte 116:119 - The current epoch time in Little Endian
-    buffer.writeUInt32LE( (Math.floor(new Date() / 1000)), 116);
+    buffer.writeUInt32LE((Math.floor(new Date() / 1000)), 116);
     
     // Byte 120:123 - 0's
     
@@ -134,7 +134,7 @@ EcoPlug.prototype.createMessage = function (command, id, state) {
     if (buffer.length == 130) {
         buffer.writeUInt16BE(new_state, 128);
     }
-    
+
     return buffer;
 }
 
@@ -153,7 +153,7 @@ EcoPlug.prototype.sendMessage = function (message, retry_count, callback) {
         if (err) {
             callback(err);
         } else {
-            timeout = setTimeout(function() {
+            timeout = setTimeout(function () {
                 socket.close();
                 if (retry_count > 0) {
                     this.log("Timeout connecting to %s - Retrying....", this.host);
@@ -174,5 +174,5 @@ EcoPlug.prototype.readState = function (message) {
 }
 
 EcoPlug.prototype.readName = function (message) {
-    return (message.toString('ascii', 48, 79));    
+    return (message.toString('ascii', 48, 79));
 }
