@@ -24,7 +24,8 @@ function EcoPlug(log, config) {
         .on('get', this.getStatus.bind(this));
 
     this._info_service = new Service.AccessoryInformation();
-    this._info_service.setCharacteristic(Characteristic.Model, this.name)
+    this._info_service
+        .setCharacteristic(Characteristic.Model, "CT-065W")
         .setCharacteristic(Characteristic.Manufacturer, "ECO Plugs")
         .setCharacteristic(Characteristic.SerialNumber, this.id);
 
