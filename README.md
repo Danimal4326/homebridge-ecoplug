@@ -38,7 +38,8 @@ Configuration sample:
 |----------|--------------------------------------------------------------------|:---:|
 | platform | Must always be `EcoPlug`                                           | Yes |
 | name     | The name of your platform. Shows up in the logs                    | Yes |
+| plugs    | Subsection to define individual plugs                              | Yes |
 |          | *Fields for plugs subsection*                                      |     |
 | name     | The name of your plug                                              | Yes |
 | host     | The hostname or ip of the EcoPlug                                  | Yes |
-| id       | The id of the Eco Plug as <br>shown in the ECO app under settings  | Yes |
+| id       | The id of the Eco Plug as shown in the ECO app under settings      | Yes |
