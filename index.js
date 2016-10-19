@@ -1,72 +1,160 @@
 "use strict";
 
-var Service, Characteristic;
+var Accessory, Service, Characteristic, UUIDGen;
 var dgram = require('dgram');
 
 module.exports = function (homebridge) {
 
+    Accessory = homebridge.platformAccessory;
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-
-    homebridge.registerAccessory("homebridge-ecoplugs", "EcoPlug", EcoPlug);
+    UUIDGen = homebridge.hap.uuid;
+    
+    homebridge.registerPlatform("homebridge-ecoplugs", "EcoPlug", EcoPlugPlatform);
 }
 
-function EcoPlug(log, config) {
+function EcoPlugPlatform(log, config, api) {
     this.log = log;
-    this.name = config.name;
-    this.id = config.id;
-    this.host = config.host;
-    this.port = 80;
+    this.config = config;
+    this.plugs = this.config.plugs || [];
+    this.accessories = [];
 
-    this._service = new Service.Switch(this.name);
-    this._service.getCharacteristic(Characteristic.On)
-        .on('set', this.setStatus.bind(this))
-        .on('get', this.getStatus.bind(this));
 
-    this._info_service = new Service.AccessoryInformation();
-    this._info_service
-        .setCharacteristic(Characteristic.Model, "CT-065W")
-        .setCharacteristic(Characteristic.Manufacturer, "ECO Plugs")
-        .setCharacteristic(Characteristic.SerialNumber, this.id);
-
+    if (api) {
+        this.api = api;
+        this.api.on('didFinishLaunching', this.didFinishLaunching.bind(this));
+    }
 }
 
-EcoPlug.prototype.getServices = function () {
-    return [this._service, this._info_service];
+EcoPlugPlatform.prototype.configureAccessory = function (accessory) {
+    var accessoryId = accessory.context.id;
+
+    this.setService(accessory);
+    this.accessories[accessoryId] = accessory;
 }
 
-EcoPlug.prototype.setStatus = function (on, callback) {
+EcoPlugPlatform.prototype.didFinishLaunching = function () {
 
-    var message = this.createMessage('set', this.id, on);
+    if (!this.plugs.length) {
+        this.log.error("No plugs configured. Please check your 'config.json' file!");
+    }
+    
+    for (var i in this.plugs) {
+        var data = this.plugs[i];
+        this.log("Adding EcoPlug: " + data.name);
+        this.addAccessory(data);
+    }
+
+    for (var id in this.accessories) {
+        var plug = this.accessories[id];
+        if (!plug.reachable) {
+            this.removeAccessory(plug);
+        }
+    }
+}
+
+EcoPlugPlatform.prototype.addAccessory = function (data) {
+    if (!this.accessories[data.id]) {
+        var uuid = UUIDGen.generate(data.id);
+
+        var newAccessory = new Accessory(data.id, uuid, 8);
+
+        newAccessory.reachable = true;
+
+        newAccessory.context.name = data.name;
+        newAccessory.context.host = data.host;
+        newAccessory.context.port = 80;
+        newAccessory.context.id = data.id;
+        
+        newAccessory.addService(Service.Switch, data.name);
+
+        this.setService(newAccessory);
+        
+        this.api.registerPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [newAccessory]);
+    }
+    else {
+        var newAccessory = this.accessories[data.id];
+
+        newAccessory.updateReachability(true);
+    }
+
+    this.getInitState(newAccessory, data);
+
+    this.accessories[data.id] = newAccessory;
+}
+
+EcoPlugPlatform.prototype.removeAccessory = function (accessory) {
+    if (accessory) {
+        var name = accessory.context.name;
+        var id = accessory.context.id;
+        this.log.warn("Removing EcoPlug: " + name + ". No longer reachable or configured.");
+        this.api.unregisterPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [accessory]);
+        delete this.accessories[id];
+    }
+}
+
+EcoPlugPlatform.prototype.setService = function (accessory) {
+    accessory.getService(Service.Switch)
+        .getCharacteristic(Characteristic.On)
+        .on('set', this.setPowerState.bind(this, accessory.context))
+        .on('get', this.getPowerState.bind(this, accessory.context));
+
+    accessory.on('identify', this.identify.bind(this, accessory.context));
+}
+
+EcoPlugPlatform.prototype.getInitState = function (accessory, data) {
+    var info = accessory.getService(Service.AccessoryInformation);
+
+    accessory.context.manufacturer = "ECO Plugs";
+    info.setCharacteristic(Characteristic.Manufacturer, accessory.context.manufacturer);
+
+    accessory.context.model = "CT-065W";
+    info.setCharacteristic(Characteristic.Model, accessory.context.model);
+
+    info.setCharacteristic(Characteristic.SerialNumber, accessory.context.id);
+
+    accessory.getService(Service.Switch)
+        .getCharacteristic(Characteristic.On)
+        .getValue();
+}
+
+EcoPlugPlatform.prototype.setPowerState = function (thisPlug, powerState, callback) {
+
+    var message = this.createMessage('set', thisPlug.id, powerState);
     var retry_count = 3;
 
-    this.sendMessage(message, retry_count, function (err, message) {
+    this.sendMessage(message, thisPlug, retry_count, function (err, message) {
         if (!err) {
-            this.log("Setting %s switch with ID %s to: %s", this.name, this.id, (on ? "ON" : "OFF"));
+            this.log("Setting %s switch with ID %s to: %s", thisPlug.name, thisPlug.id, (powerState ? "ON" : "OFF"));
         }
         callback(err, null);
     }.bind(this));
 
 }
 
-EcoPlug.prototype.getStatus = function (callback) {
+EcoPlugPlatform.prototype.getPowerState = function (thisPlug, callback) {
 
     var status = false;
 
-    var message = this.createMessage('get', this.id);
+    var message = this.createMessage('get', thisPlug.id);
     var retry_count = 3;
 
-    this.sendMessage(message, retry_count, function (err, message) {
+    this.sendMessage(message, thisPlug, retry_count, function (err, message) {
         if (!err) {
             status = this.readState(message);
-            this.log("Status of %s switch with ID %s is: %s", this.name, this.id, (status ? "ON" : "OFF"));
+            this.log("Status of %s switch with ID %s is: %s", thisPlug.name, thisPlug.id, (status ? "ON" : "OFF"));
         }
         callback(err, status);
     }.bind(this));
 
 }
 
-EcoPlug.prototype.createMessage = function (command, id, state) {
+EcoPlugPlatform.prototype.identify = function (thisPlug, paired, callback) {
+  this.log("Identify requested for " + thisPlug.name);
+  callback();
+}
+
+EcoPlugPlatform.prototype.createMessage = function (command, id, state) {
 
     var bufferLength;
     var command1;
@@ -138,7 +226,7 @@ EcoPlug.prototype.createMessage = function (command, id, state) {
     return buffer;
 }
 
-EcoPlug.prototype.sendMessage = function (message, retry_count, callback) {
+EcoPlugPlatform.prototype.sendMessage = function (message, thisPlug, retry_count, callback) {
 
     var socket = dgram.createSocket('udp4');
     var timeout;
@@ -149,18 +237,18 @@ EcoPlug.prototype.sendMessage = function (message, retry_count, callback) {
         callback(null, message);
     }.bind(this));
 
-    socket.send(message, 0, message.length, this.port, this.host, function (err, bytes) {
+    socket.send(message, 0, message.length, thisPlug.port, thisPlug.host, function (err, bytes) {
         if (err) {
             callback(err);
         } else {
             timeout = setTimeout(function () {
                 socket.close();
                 if (retry_count > 0) {
-                    this.log("Timeout connecting to %s - Retrying....", this.host);
+                    this.log.warn("Timeout connecting to %s - Retrying....", thisPlug.host);
                     var cnt = retry_count - 1;
-                    this.sendMessage(message, cnt, callback);
+                    this.sendMessage(message, thisPlug, cnt, callback);
                 } else {
-                    this.log("Timeout connecting to %s - Failing", this.host);
+                    this.log.error("Timeout connecting to %s - Failing", thisPlug.host);
                     callback(true);
                 }
             }.bind(this), 500);
@@ -169,10 +257,10 @@ EcoPlug.prototype.sendMessage = function (message, retry_count, callback) {
 
 }
 
-EcoPlug.prototype.readState = function (message) {
+EcoPlugPlatform.prototype.readState = function (message) {
     return (message.readUInt8(129)) ? true : false;
 }
 
-EcoPlug.prototype.readName = function (message) {
+EcoPlugPlatform.prototype.readName = function (message) {
     return (message.toString('ascii', 48, 79));
 }

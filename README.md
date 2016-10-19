@@ -1,5 +1,5 @@
 # homebridge-ecoplug
-[Homebridge](https://github.com/nfarina/homebridge) accessory plugin for Eco smart plugs
+[Homebridge](https://github.com/nfarina/homebridge) platform plugin for Eco smart plugs
 
 This plugin allows you to remotely control the state of your Eco Plug.  It allows you to set the on/off state.
 
@@ -14,19 +14,31 @@ This plugin allows you to remotely control the state of your Eco Plug.  It allow
 Configuration sample:
 
  ```
-        "accessories": [
+        "platforms": [
             {
-                "accessory": "EcoPlug",
-                "name": "Eco plug name",
-                "host": "192.168.0.xxx",
-                "id": "ECO-xxxxxxxx"
+                "platform": "EcoPlug",
+                "name": "EcoPlug",
+                "plugs": [
+                    {
+                        "name": "EcoPlug1",
+                        "host": "192.168.0.xxx",
+                        "id": "ECO-xxxxxxxx"
+                    },
+                    {
+                        "name": "EcoPlug2",
+                        "host": "192.168.0.yyy",
+                        "id": "ECO-yyyyyyyy"                        
+                    }
+                ]
             }
         ]
 ```
 
-Fields:
-
-* "accessory": Must always be "EcoPlug" (required)
-* "name": Can be anything (required)
-* "host": The hostname or ip of the Eco Plug (required)
-* "id": The id of the Eco Plug as shown in the ECO app under settings (required)
+| Fields   | Description | Required |
+|----------|--------------------------------------------------------------------|:---:|
+| platform | Must always be `EcoPlug`                                           | Yes |
+| name     | The name of your platform. Shows up in the logs                    | Yes |
+|          | *Fields for plugs subsection*                                      |     |
+| name     | The name of your plug                                              | Yes |
+| host     | The hostname or ip of the EcoPlug                                  | Yes |
+| id       | The id of the Eco Plug as <br>shown in the ECO app under settings  | Yes |
