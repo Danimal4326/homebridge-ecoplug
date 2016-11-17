@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "binary-parser": "~1.1.5"
-  }
+  },
   "main": "index.js",
   "author": "Dan Chlopek"
 }
