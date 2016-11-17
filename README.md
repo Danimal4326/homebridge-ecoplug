@@ -1,7 +1,15 @@
 # homebridge-ecoplug
 [Homebridge](https://github.com/nfarina/homebridge) platform plugin for Eco smart plugs
 
-This plugin allows you to remotely control the state of your Eco Plug.  It allows you to set the on/off state.
+This plugin allows you to remotely control the state of your Eco Plug.  It allows
+you to set the on/off state.  This plugin supports device auto discovery, and
+will scan the network during startup for 1.5 seconds and add all discovered devices.
+It will also remove any devices not responding during startup.
+
+# Tested devices
+
+- ECO Plugs CT-65W Wi-Fi Controlled Outlet
+- Woods WiOn 50052 WiFi In-Wall Light Switch
 
 # Installation
 
@@ -17,29 +25,12 @@ Configuration sample:
         "platforms": [
             {
                 "platform": "EcoPlug",
-                "name": "EcoPlug",
-                "plugs": [
-                    {
-                        "name": "EcoPlug1",
-                        "host": "192.168.0.xxx",
-                        "id": "ECO-xxxxxxxx"
-                    },
-                    {
-                        "name": "EcoPlug2",
-                        "host": "192.168.0.yyy",
-                        "id": "ECO-yyyyyyyy"                        
-                    }
-                ]
+                "name": "EcoPlug"
+
             }
         ]
 ```
 
-| Fields   | Description | Required |
-|----------|--------------------------------------------------------------------|:---:|
-| platform | Must always be `EcoPlug`                                           | Yes |
-| name     | The name of your platform. Shows up in the logs                    | Yes |
-| plugs    | Subsection to define individual plugs                              | Yes |
-|          | *Fields for plugs subsection*                                      |     |
-| name     | The name of your plug                                              | Yes |
-| host     | The hostname or ip of the EcoPlug                                  | Yes |
-| id       | The id of the Eco Plug as shown in the ECO app under settings      | Yes |
+#Credits
+
+- NorthernMan54 - Added device auto discovery
