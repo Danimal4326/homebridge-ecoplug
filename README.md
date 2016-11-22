@@ -3,8 +3,9 @@
 
 This plugin allows you to remotely control the state of your Eco Plug.  It allows
 you to set the on/off state.  This plugin supports device auto discovery, and
-will scan the network during startup for 1.5 seconds and add all discovered devices.
-It will also remove any devices not responding during startup.
+will scan the network for new devices every 60 seconds and add new devices.  To
+remove devices that are no longer responding, use the 'Identify Accessory' button
+on the accessory page of settings on Eve.  It will remove non-responding accessories.
 
 # Tested devices
 
