@@ -31,6 +31,10 @@ Configuration sample:
             }
         ]
 ```
+## Optional parameters
+
+- debug, this will enable more logging information from the plugin
+  "debug": "True"
 
 #Credits
 
