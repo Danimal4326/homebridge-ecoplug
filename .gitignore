@@ -1,3 +1,4 @@
 node_modules/
 udp_serv.js
 multicast.js
+publish.sh
