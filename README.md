@@ -27,7 +27,6 @@ Configuration sample:
             {
                 "platform": "EcoPlug",
                 "name": "EcoPlug"
-
             }
         ]
 ```

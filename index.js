@@ -79,25 +79,31 @@ EcoPlugPlatform.prototype.deviceDiscovery = function() {
         this.log("Sending device discovery message");
     eco.discovery(this, function(err, devices) {
 
-        if (this.debug) this.log("Adding discovered devices");
+        if (err) {
+            this.log("ERROR: deviceDisovery", err);
+        } else {
+            if (this.debug) this.log("Adding discovered devices");
 
-        for (var i in devices) {
-            var existing = this.accessories[devices[i].id];
-            // existing devices are not reachable during a homebridge restart
-            if (!existing || !existing.reachable) {
-                this.log("Adding:", devices[i].id, devices[i].name, devices[i].host);
-                this.addAccessory(devices[i]);
-            } else {
-                if (this.debug) this.log("Skipping existing device", i);
+            for (var i in devices) {
+                var existing = this.accessories[devices[i].id];
+                // existing devices are not reachable during a homebridge restart
+                if (!existing || !existing.reachable) {
+                    this.log("Adding:", devices[i].id, devices[i].name, devices[i].host);
+                    this.addAccessory(devices[i]);
+                } else {
+                    if (this.debug) this.log("Skipping existing device", i);
+                }
             }
-        }
-        for (var id in this.accessories) {
-            var found = devices[id];
-            if (!found) {
-                this.log("Not found ", id);
-                this.accessories[id].reachable = false;
-                // If reachability is false, the identify accessory button doesn't work.
-                //                this.accessories[id].updateReachability(false);
+            if (devices) {
+                for (var id in this.accessories) {
+                    var found = devices[id];
+                    if (!found) {
+                        this.log("Not found ", id);
+                        this.accessories[id].reachable = false;
+                        // If reachability is false, the identify accessory button doesn't work.
+                        //                this.accessories[id].updateReachability(false);
+                    }
+                }
             }
         }
         if (this.debug) this.log("Discovery complete");
