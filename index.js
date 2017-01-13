@@ -124,7 +124,7 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
         newAccessory.context.id = data.id;
         newAccessory.context.cb = false;
 
-        newAccessory.addService(Service.Lightbulb, data.name);
+        newAccessory.addService(Service.Outlet, data.name);
 
         this.setService(newAccessory);
 
