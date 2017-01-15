@@ -51,7 +51,7 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
             cb(null, message.status);
         } else {
             accessory.updateReachability(true);
-            accessory.getService(Service.Lightbulb)
+            accessory.getService(Service.Outlet)
                 .getCharacteristic(Characteristic.On)
                 .updateValue(message.status);
         }
@@ -151,7 +151,7 @@ EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
 }
 
 EcoPlugPlatform.prototype.setService = function(accessory) {
-    accessory.getService(Service.Lightbulb)
+    accessory.getService(Service.Outlet)
         .getCharacteristic(Characteristic.On)
         .on('set', this.setPowerState.bind(this, accessory.context))
         .on('get', this.getPowerState.bind(this, accessory.context));
@@ -170,7 +170,7 @@ EcoPlugPlatform.prototype.getInitState = function(accessory, data) {
 
     info.setCharacteristic(Characteristic.SerialNumber, accessory.context.id);
 
-    accessory.getService(Service.Lightbulb)
+    accessory.getService(Service.Outlet)
         .getCharacteristic(Characteristic.On)
         .getValue();
 }
