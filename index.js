@@ -50,7 +50,7 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
             // this is the callback from the getPowerState
             cb(null, message.status);
         } else {
-            accessory.updateReachability(true);
+//            accessory.updateReachability(true);
             accessory.getService(Service.Outlet)
                 .getCharacteristic(Characteristic.On)
                 .updateValue(message.status);
@@ -132,7 +132,7 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
     } else {
         var newAccessory = this.accessories[data.id];
 
-        newAccessory.updateReachability(true);
+//        newAccessory.updateReachability(true);
     }
 
     this.getInitState(newAccessory, data);
