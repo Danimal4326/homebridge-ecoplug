@@ -1,6 +1,7 @@
 "use strict";
 
 var eco = require('./lib/eco.js');
+var debug = require('debug')('ECOPLUG');
 var Accessory, Service, Characteristic, UUIDGen;
 
 module.exports = function(homebridge) {
@@ -19,8 +20,6 @@ function EcoPlugPlatform(log, config, api) {
     //    this.plugs = this.config.plugs || [];
     this.accessories = [];
     this.cache_timeout = 10; // seconds
-    this.debug = config['debug'] || false;
-
 
     if (api) {
         this.api = api;
@@ -40,8 +39,8 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
 
     eco.startUdpServer(this, function(message) {
         // handle status messages received from devices
-        if (that.debug)
-            that.log("Status: %s %s is: %s", message.id, message.name, (message.status ? "ON" : "OFF"));
+
+            debug("Status: %s %s is: %s", message.id, message.name, (message.status ? "ON" : "OFF"));
         var accessory = that.accessories[message.id];
 
         if (typeof accessory.context.cb === "function") {
@@ -66,8 +65,8 @@ EcoPlugPlatform.prototype.devicePolling = function() {
     for (var id in this.accessories) {
         var plug = this.accessories[id];
         if (plug.reachable) {
-            if (this.debug)
-                this.log("Poll:", id, plug.context.name);
+
+                debug("Poll:", id, plug.context.name);
             this.sendStatusMessage(plug.context);
         }
     }
@@ -75,14 +74,14 @@ EcoPlugPlatform.prototype.devicePolling = function() {
 
 EcoPlugPlatform.prototype.deviceDiscovery = function() {
     // Send a device discovery message every interval
-    if (this.debug)
-        this.log("Sending device discovery message");
+
+        debug("Sending device discovery message");
     eco.discovery(this, function(err, devices) {
 
         if (err) {
             this.log("ERROR: deviceDisovery", err);
         } else {
-            if (this.debug) this.log("Adding discovered devices");
+            debug("Adding discovered devices");
 
             for (var i in devices) {
                 var existing = this.accessories[devices[i].id];
@@ -91,7 +90,7 @@ EcoPlugPlatform.prototype.deviceDiscovery = function() {
                     this.log("Adding:", devices[i].id, devices[i].name, devices[i].host);
                     this.addAccessory(devices[i]);
                 } else {
-                    if (this.debug) this.log("Skipping existing device", i);
+                    debug("Skipping existing device", i);
                 }
             }
             if (devices) {
@@ -106,7 +105,7 @@ EcoPlugPlatform.prototype.deviceDiscovery = function() {
                 }
             }
         }
-        if (this.debug) this.log("Discovery complete");
+        debug("Discovery complete");
     }.bind(this));
 }
 
