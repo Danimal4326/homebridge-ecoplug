@@ -38,4 +38,5 @@ Configuration sample:
 
 #Credits
 
+- Danimal4326   - Inital Code and ECOPlug protocol
 - NorthernMan54 - Added device auto discovery
