@@ -48,7 +48,7 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
   eco.startUdpServer(this, function(message) {
     // handle status messages received from devices
 
-    debug("Status: %s %s is: %s", message.id, message.name, (message.status ? "ON" : "OFF"));
+    //debug("Status: %s %s is: %s", message.id, message.name, (message.status ? "ON" : "OFF"));
     var accessory = that.accessories[message.id];
 
     if (typeof accessory.context.cb === "function") {
@@ -73,8 +73,8 @@ EcoPlugPlatform.prototype.devicePolling = function() {
   for (var id in this.accessories) {
     var plug = this.accessories[id];
 
-      debug("Poll:", id, plug.context.name);
-      this.sendStatusMessage(plug.context);
+    debug("Poll:", id, plug.context.name);
+    this.sendStatusMessage(plug.context);
 
   }
 }
@@ -92,19 +92,17 @@ EcoPlugPlatform.prototype.deviceDiscovery = function() {
 
       for (var i in devices) {
         var existing = this.accessories[devices[i].id];
-        // existing devices are not reachable during a homebridge restart
-        if (!existing ) {
+
+        if (!existing) {
           this.log("Adding:", devices[i].id, devices[i].name, devices[i].host);
           this.addAccessory(devices[i]);
         } else {
-          debug("Skipping existing device", i);
-        }
-      }
-      if (devices) {
-        for (var id in this.accessories) {
-          var found = devices[id];
-          if (!found) {
-            this.log("Not found ", id);
+
+          if (devices[i].host != existing.context.host) {
+            this.log("Updating IP Address for", devices[i].id, devices[i].name, devices[i].host);
+            existing.context.host = devices[i].host;
+          } else {
+            debug("Skipping existing device", i, devices[i].host);
           }
         }
       }
@@ -119,7 +117,7 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
 
     var newAccessory = new Accessory(data.id, uuid, 8);
 
-    newAccessory.reachable = true;
+    //    newAccessory.reachable = true;
 
     newAccessory.context.name = data.name;
     newAccessory.context.host = data.host;
@@ -147,7 +145,7 @@ EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
   if (accessory) {
     var name = accessory.context.name;
     var id = accessory.context.id;
-    this.log.warn("Removing EcoPlug: " + name + ". No longer reachable or configured.");
+    this.log("Removing EcoPlug: " + name);
     this.api.unregisterPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [accessory]);
     delete this.accessories[id];
   }
@@ -156,8 +154,8 @@ EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
 EcoPlugPlatform.prototype.setService = function(accessory) {
   accessory.getService(Service.Outlet)
     .getCharacteristic(Characteristic.On)
-    .on('set', this.setPowerState.bind(this, accessory.context))
-    .on('get', this.getPowerState.bind(this, accessory.context));
+    .on('set', this.setPowerState.bind(this, accessory.context));
+//    .on('get', this.getPowerState.bind(this, accessory.context));
 
   accessory.on('identify', this.identify.bind(this, accessory.context));
 }
@@ -181,19 +179,19 @@ EcoPlugPlatform.prototype.getInitState = function(accessory, data) {
 EcoPlugPlatform.prototype.setPowerState = function(thisPlug, powerState, callback) {
   var that = this;
 
-    var message = eco.createMessage('set', thisPlug.id, powerState);
-    var retry_count = 3;
+  var message = eco.createMessage('set', thisPlug.id, powerState);
+  var retry_count = 3;
 
-    eco.sendMessage(that, message, thisPlug, retry_count, function(err, message) {
-      if (!err) {
-        this.log("Setting: %s %s to: %s", thisPlug.id, thisPlug.name, (powerState ? "ON" : "OFF"));
-        callback();
-      } else {
-        this.log("Error Setting: %s %s to: %s", thisPlug.id, thisPlug.name, (powerState ? "ON" : "OFF"));
-        callback(new Error("Device not reachable"));
-      }
+  eco.sendMessage(that, message, thisPlug, retry_count, function(err, message) {
+    if (!err) {
+      this.log("Setting: %s %s to: %s", thisPlug.id, thisPlug.name, (powerState ? "ON" : "OFF"));
+      callback();
+    } else {
+      this.log("Error Setting: %s %s to: %s", thisPlug.id, thisPlug.name, (powerState ? "ON" : "OFF"));
+      callback(new Error("Device not reachable"));
+    }
 
-    }.bind(this));
+  }.bind(this));
 
 }
 
@@ -203,38 +201,45 @@ EcoPlugPlatform.prototype.getPowerState = function(thisPlug, callback) {
   // storing callback with the accessory so that the value can be updated with
   // the response message
 
-  if (this.accessories[thisPlug.id] && this.accessories[thisPlug.id].reachable) {
-    this.log("Getting Status: %s %s", thisPlug.id, thisPlug.name)
-    thisPlug.cb = callback;
-    this.sendStatusMessage(thisPlug);
-  } else {
-    callback(new Error("Device not reachable"));
-  }
+  this.log("Getting Status: %s %s", thisPlug.id, thisPlug.name)
+  //  thisPlug.cb = callback;
+  this.sendStatusMessage(thisPlug, callback);
+  //  callback();
 
 }
 
-EcoPlugPlatform.prototype.sendStatusMessage = function(thisPlug) {
+EcoPlugPlatform.prototype.sendStatusMessage = function(thisPlug, callback) {
   // Send a return status message to a device
   var message = eco.createMessage('get', thisPlug.id);
   var retry_count = 3;
 
   eco.sendMessage(this, message, thisPlug, retry_count, function(err, message) {
     if (err) {
-      this.log.error("Error: getPowerState", thisPlug.id, err)
-      var cb = thisPlug.cb;
-      if (cb) {
-        thisPlug.cb = false;
-        // this is the callback from the getPowerState
-        cb(err);
+      this.log.error("Error: sendStatusMessage", thisPlug.id, err)
+      if (callback) {
+//        debug("ERROR: sendStatusMessage - Callback", thisPlug.id);
+        callback(err);
+      }
+    } else {
+      if (callback) {
+//        debug("OKAY: sendStatusMessage - Callback", thisPlug.id);
+        callback();
       }
     }
   }.bind(this));
 }
 
 EcoPlugPlatform.prototype.identify = function(thisPlug, paired, callback) {
-  this.log("Identify requested for " + thisPlug.name);
-  if (this.accessories[thisPlug.id] && !this.accessories[thisPlug.id].reachable) {
-    this.removeAccessory(this.accessories[thisPlug.id]);
+  this.log("Identify requested for " + thisPlug.id, thisPlug.name);
+  if (this.accessories[thisPlug.id]) {
+    this.sendStatusMessage(thisPlug, function(err) {
+      if( err ) {
+        debug("Identity - Not Found");
+        this.removeAccessory(this.accessories[thisPlug.id]);
+      } else {
+        debug("Identity - Found");
+      }
+    }.bind(this));
   }
   callback();
 }
