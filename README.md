@@ -1,5 +1,5 @@
 # homebridge-ecoplug
-[Homebridge](https://github.com/nfarina/homebridge) platform plugin for Eco smart plugs
+[Homebridge](https://github.com/nfarina/homebridge) platform plugin for Eco and WION Wi-Fi modules and switches
 
 This plugin allows you to remotely control the state of your Eco Plug.  It allows
 you to set the on/off state.  This plugin supports device auto discovery, and
@@ -14,8 +14,8 @@ on the accessory page of settings on Eve.  It will remove non-responding accesso
 
 # Installation
 
-1. Install homebridge using: npm install -g homebridge
-2. Install this plugin using: npm install -g homebridge-ecoplug
+1. Install homebridge using: sudo npm install -g homebridge
+2. Install this plugin using: sudo npm install -g homebridge-ecoplug
 3. Update your configuration file. See below for a sample.
 
 # Configuration
@@ -32,9 +32,7 @@ Configuration sample:
 ```
 ## Optional parameters
 
-- debug, this will enable more logging information from the plugin
-
-  "debug": "True"
+- None
 
 #Credits
 
