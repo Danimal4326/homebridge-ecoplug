@@ -28,6 +28,7 @@ function EcoPlugPlatform(log, config, api) {
   //    this.plugs = this.config.plugs || [];
   this.accessories = [];
   this.cache_timeout = 10; // seconds
+  this.refresh = config['refresh'] || 10; // Update every 10 seconds
 
   if (api) {
     this.api = api;
@@ -48,7 +49,6 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
   eco.startUdpServer(this, function(message) {
     // handle status messages received from devices
 
-    //debug("Status: %s %s is: %s", message.id, message.name, (message.status ? "ON" : "OFF"));
     var accessory = that.accessories[message.id];
 
     if (typeof accessory.context.cb === "function") {
@@ -64,7 +64,7 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
     }
   });
   this.deviceDiscovery();
-  setInterval(that.devicePolling.bind(that), this.cache_timeout * 1000);
+  setInterval(that.devicePolling.bind(that), this.refresh * 1000);
   setInterval(that.deviceDiscovery.bind(that), this.cache_timeout * 6000);
 }
 
@@ -115,30 +115,30 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
   if (!this.accessories[data.id]) {
     var uuid = UUIDGen.generate(data.id);
 
-    var newAccessory = new Accessory(data.id, uuid, 8);
+    var accessory = new Accessory(data.id, uuid, 8);
 
-    //    newAccessory.reachable = true;
+    accessory.context.name = data.name;
+    accessory.context.host = data.host;
+    accessory.context.port = 80;
+    accessory.context.id = data.id;
+    accessory.context.cb = false;
 
-    newAccessory.context.name = data.name;
-    newAccessory.context.host = data.host;
-    newAccessory.context.port = 80;
-    newAccessory.context.id = data.id;
-    newAccessory.context.cb = false;
+    accessory.getService(Service.AccessoryInformation)
+    .setCharacteristic(Characteristic.Manufacturer, "ECO Plugs")
+    .setCharacteristic(Characteristic.Model, "CT-065W")
+    .setCharacteristic(Characteristic.SerialNumber, accessory.context.id)
+    .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version);
 
-    newAccessory.addService(Service.Outlet, data.name);
+    accessory.addService(Service.Outlet, data.name);
 
-    this.setService(newAccessory);
+    this.setService(accessory);
 
-    this.api.registerPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [newAccessory]);
+    this.api.registerPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [accessory]);
   } else {
-    var newAccessory = this.accessories[data.id];
-
-    //        newAccessory.updateReachability(true);
+    var accessory = this.accessories[data.id];
   }
 
-  this.getInitState(newAccessory, data);
-
-  this.accessories[data.id] = newAccessory;
+  this.accessories[data.id] = accessory;
 }
 
 EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
@@ -160,22 +160,6 @@ EcoPlugPlatform.prototype.setService = function(accessory) {
   accessory.on('identify', this.identify.bind(this, accessory.context));
 }
 
-EcoPlugPlatform.prototype.getInitState = function(accessory, data) {
-  var info = accessory.getService(Service.AccessoryInformation);
-
-  accessory.context.manufacturer = "ECO Plugs";
-  info.setCharacteristic(Characteristic.Manufacturer, accessory.context.manufacturer);
-
-  accessory.context.model = "CT-065W";
-  info.setCharacteristic(Characteristic.Model, accessory.context.model);
-
-  info.setCharacteristic(Characteristic.SerialNumber, accessory.context.id);
-
-  accessory.getService(Service.Outlet)
-    .getCharacteristic(Characteristic.On)
-    .getValue();
-}
-
 EcoPlugPlatform.prototype.setPowerState = function(thisPlug, powerState, callback) {
   var that = this;
 
@@ -188,23 +172,10 @@ EcoPlugPlatform.prototype.setPowerState = function(thisPlug, powerState, callbac
       callback();
     } else {
       this.log("Error Setting: %s %s to: %s", thisPlug.id, thisPlug.name, (powerState ? "ON" : "OFF"));
-      callback(new Error("Device not reachable"));
+      callback(err);
     }
 
   }.bind(this));
-
-}
-
-
-EcoPlugPlatform.prototype.getPowerState = function(thisPlug, callback) {
-
-  // storing callback with the accessory so that the value can be updated with
-  // the response message
-
-  this.log("Getting Status: %s %s", thisPlug.id, thisPlug.name)
-  //  thisPlug.cb = callback;
-  this.sendStatusMessage(thisPlug, callback);
-  //  callback();
 
 }
 
@@ -215,14 +186,15 @@ EcoPlugPlatform.prototype.sendStatusMessage = function(thisPlug, callback) {
 
   eco.sendMessage(this, message, thisPlug, retry_count, function(err, message) {
     if (err) {
-      this.log.error("Error: sendStatusMessage", thisPlug.id, err)
+      this.log.error("Error: sendStatusMessage", thisPlug.id, err.message);
+      this.accessories[thisPlug.id].getService(Service.Outlet)
+        .getCharacteristic(Characteristic.On)
+        .updateValue(new Error("Polling failed"));
       if (callback) {
-//        debug("ERROR: sendStatusMessage - Callback", thisPlug.id);
         callback(err);
       }
     } else {
       if (callback) {
-//        debug("OKAY: sendStatusMessage - Callback", thisPlug.id);
         callback();
       }
     }
