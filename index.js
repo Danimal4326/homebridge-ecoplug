@@ -44,28 +44,20 @@ EcoPlugPlatform.prototype.configureAccessory = function(accessory) {
 }
 
 EcoPlugPlatform.prototype.didFinishLaunching = function() {
-  var that = this;
 
   eco.startUdpServer(this, function(message) {
     // handle status messages received from devices
 
-    var accessory = that.accessories[message.id];
+    var accessory = this.accessories[message.id];
 
-    if (typeof accessory.context.cb === "function") {
-      var cb = accessory.context.cb;
-      accessory.context.cb = false;
-      // this is the callback from the getPowerState
-      cb(null, message.status);
-    } else {
-      //            accessory.updateReachability(true);
-      accessory.getService(Service.Outlet)
-        .getCharacteristic(Characteristic.On)
-        .updateValue(message.status);
-    }
+    accessory.getService(Service.Outlet)
+      .getCharacteristic(Characteristic.On)
+      .updateValue(message.status);
+
   });
   this.deviceDiscovery();
-  setInterval(that.devicePolling.bind(that), this.refresh * 1000);
-  setInterval(that.deviceDiscovery.bind(that), this.cache_timeout * 6000);
+  setInterval(that.devicePolling.bind(this), this.refresh * 1000);
+  setInterval(that.deviceDiscovery.bind(this), this.cache_timeout * 6000);
 }
 
 EcoPlugPlatform.prototype.devicePolling = function() {
@@ -121,13 +113,12 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
     accessory.context.host = data.host;
     accessory.context.port = 80;
     accessory.context.id = data.id;
-    accessory.context.cb = false;
 
     accessory.getService(Service.AccessoryInformation)
-    .setCharacteristic(Characteristic.Manufacturer, "ECO Plugs")
-    .setCharacteristic(Characteristic.Model, "CT-065W")
-    .setCharacteristic(Characteristic.SerialNumber, accessory.context.id)
-    .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version);
+      .setCharacteristic(Characteristic.Manufacturer, "ECO Plugs")
+      .setCharacteristic(Characteristic.Model, "CT-065W")
+      .setCharacteristic(Characteristic.SerialNumber, accessory.context.id)
+      .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version);
 
     accessory.addService(Service.Outlet, data.name);
 
@@ -155,7 +146,6 @@ EcoPlugPlatform.prototype.setService = function(accessory) {
   accessory.getService(Service.Outlet)
     .getCharacteristic(Characteristic.On)
     .on('set', this.setPowerState.bind(this, accessory.context));
-//    .on('get', this.getPowerState.bind(this, accessory.context));
 
   accessory.on('identify', this.identify.bind(this, accessory.context));
 }
@@ -205,7 +195,7 @@ EcoPlugPlatform.prototype.identify = function(thisPlug, paired, callback) {
   this.log("Identify requested for " + thisPlug.id, thisPlug.name);
   if (this.accessories[thisPlug.id]) {
     this.sendStatusMessage(thisPlug, function(err) {
-      if( err ) {
+      if (err) {
         debug("Identity - Not Found");
         this.removeAccessory(this.accessories[thisPlug.id]);
       } else {
