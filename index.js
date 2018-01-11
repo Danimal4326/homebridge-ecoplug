@@ -55,8 +55,6 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
 
   });
 
-  debug("HAPServer",HAPServer);
-
   HAPServer.emit('accessories', function(err, accessories) {
     JSON.stringify(accessories);
   });
@@ -139,14 +137,6 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
   accessories[data.id] = accessory;
 }
 
-EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
-  if (accessory) {
-    var id = accessory.context.id;
-    this.log("Removing EcoPlug: " + accessory.context.name);
-    this.api.unregisterPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [accessory]);
-    delete accessories[id];
-  }
-}
 
 EcoPlugPlatform.prototype.setService = function(accessory) {
   accessory.getService(Service.Outlet)
@@ -212,10 +202,12 @@ EcoPlugPlatform.prototype.identify = function(thisPlug, paired, callback) {
   callback();
 }
 
-EcoPlugPlatform.prototype.readState = function(message) {
-  return (message.readUInt8(129)) ? true : false;
-}
 
-EcoPlugPlatform.prototype.readName = function(message) {
-  return (message.toString('ascii', 48, 79));
+EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
+  if (accessory) {
+    var id = accessory.context.id;
+    this.log("Removing EcoPlug: " + accessory.context.name);
+    this.api.unregisterPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [accessory]);
+    delete accessories[id];
+  }
 }
