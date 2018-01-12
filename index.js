@@ -55,10 +55,6 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
 
   });
 
-  HAPServer.emit('accessories', function(err, accessories) {
-    JSON.stringify(accessories);
-  });
-
   this.deviceDiscovery();
   setInterval(this.devicePolling.bind(this), this.refresh * 1000);
   setInterval(this.deviceDiscovery.bind(this), this.cache_timeout * 6000);
