@@ -11,6 +11,7 @@ on the accessory page of settings on Eve.  It will remove non-responding accesso
 
 - ECO Plugs CT-65W Wi-Fi Controlled Outlet
 - Woods WiOn 50052 WiFi In-Wall Light Switch
+- WiOn Outdoor Outlet 50049
 
 # Installation
 
@@ -36,5 +37,6 @@ Configuration sample:
 
 #Credits
 
-- Danimal4326   - Inital Code and ECOPlug protocol
+- Danimal4326   - Initial Code and ECOPlug protocol
 - NorthernMan54 - Added device auto discovery
+- askovi - Tested WiOn Outdoor Outlet 50049
