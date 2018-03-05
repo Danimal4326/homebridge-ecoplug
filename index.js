@@ -116,7 +116,7 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
     accessory.context.id = data.id;
 
     accessory.getService(Service.AccessoryInformation)
-      .setCharacteristic(Characteristic.Manufacturer, "ECO Plugs")
+      .setCharacteristic(Characteristic.Manufacturer, "ecoplug")
       .setCharacteristic(Characteristic.Model, "CT-065W")
       .setCharacteristic(Characteristic.SerialNumber, accessory.context.id)
       .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version);
