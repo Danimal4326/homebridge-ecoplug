@@ -39,6 +39,7 @@ EcoPlugPlatform.prototype.configureAccessory = function(accessory) {
   var accessoryId = accessory.context.id;
   this.log("configureAccessory", accessoryId, accessory.context.name);
   this.setService(accessory);
+  accessory.context.lastUpdated = Date.now();
   accessories[accessoryId] = accessory;
 }
 
