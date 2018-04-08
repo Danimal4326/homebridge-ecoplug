@@ -53,6 +53,8 @@ EcoPlugPlatform.prototype.didFinishLaunching = function() {
       .getCharacteristic(Characteristic.On)
       .updateValue(message.status);
 
+    accessory.context.lastUpdated = Date.now();
+
   });
 
   this.deviceDiscovery();
@@ -95,7 +97,7 @@ EcoPlugPlatform.prototype.deviceDiscovery = function() {
             this.log("Updating IP Address for", devices[i].id, devices[i].name, devices[i].host);
             existing.context.host = devices[i].host;
           } else {
-            debug("Skipping existing device", i, devices[i].host);
+            debug("Skipping existing device", i, devices[i].name);
           }
         }
       }
@@ -181,6 +183,14 @@ EcoPlugPlatform.prototype.sendStatusMessage = function(thisPlug, callback) {
       }
     }
   }.bind(this));
+
+  // If no status update received for 3 refresh cycles, mark as not available
+  if (Date.now() - thisPlug.lastUpdated > this.refresh * 3 * 1000) {
+    debug("Plug not responding", thisPlug.id, thisPlug.name);
+    accessories[thisPlug.id].getService(Service.Outlet)
+      .getCharacteristic(Characteristic.On)
+      .updateValue(new Error("No Response"));
+  }
 }
 
 EcoPlugPlatform.prototype.identify = function(thisPlug, paired, callback) {
@@ -188,16 +198,15 @@ EcoPlugPlatform.prototype.identify = function(thisPlug, paired, callback) {
   if (accessories[thisPlug.id]) {
     this.sendStatusMessage(thisPlug, function(err) {
       if (err) {
-        debug("Identity - Not Found");
+        debug("Identity - Not Found", thisPlug.id);
         this.removeAccessory(accessories[thisPlug.id]);
       } else {
-        debug("Identity - Found");
+        debug("Identity - Found", thisPlug.id);
       }
     }.bind(this));
   }
   callback();
 }
-
 
 EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
   if (accessory) {
