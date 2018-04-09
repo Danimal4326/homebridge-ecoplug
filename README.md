@@ -10,7 +10,7 @@ on the accessory page of settings on Eve.  It will remove non-responding accesso
 # Tested devices
 
 - ECO Plugs CT-65W Wi-Fi Controlled Outlet
-- Woods WiOn 50052 WiFi In-Wall Light Switch
+- ~~Woods WiOn 50052 WiFi In-Wall Light Switch~~ This switch has been recalled due to fire hazard
 - WiOn Outdoor Outlet 50049
 
 # Installation
