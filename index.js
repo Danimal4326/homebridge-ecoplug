@@ -196,15 +196,9 @@ EcoPlugPlatform.prototype.sendStatusMessage = function(thisPlug, callback) {
 
 EcoPlugPlatform.prototype.identify = function(thisPlug, paired, callback) {
   this.log("Identify requested for " + thisPlug.id, thisPlug.name);
-  if (accessories[thisPlug.id]) {
-    this.sendStatusMessage(thisPlug, function(err) {
-      if (err) {
-        debug("Identity - Not Found", thisPlug.id);
-        this.removeAccessory(accessories[thisPlug.id]);
-      } else {
-        debug("Identity - Found", thisPlug.id);
-      }
-    }.bind(this));
+  if (accessories[thisPlug.id].getService(Service.Outlet).getCharacteristic(Characteristic.On).status instanceof Error) {
+    debug("Identity - Not Found, remove device", thisPlug.id);
+    this.removeAccessory(accessories[thisPlug.id]);
   }
   callback();
 }
