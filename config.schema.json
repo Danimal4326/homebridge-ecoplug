@@ -1,0 +1,7 @@
+{
+    "pluginAlias": "EcoPlug",
+    "pluginType": "platform",
+    "headerDisplay": "No Configuration Required.",
+    "singular": true,
+    "schema": {"type": "object", "properties": {}}
+}
