@@ -5,6 +5,14 @@
 	"singular": true,
 	"schema": {
 		"type": "object",
-		"properties": {}
+		"properties": {
+			"name": {
+				"title": "Name",
+				"type": "string",
+				"required": true,
+				"default": "EcoPlug",
+				"description": "Plugin name as displayed in the Homebridge log"
+			}
+		}
 	}
 }
