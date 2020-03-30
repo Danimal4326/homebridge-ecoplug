@@ -1,7 +1,7 @@
 {
 	"pluginAlias": "EcoPlug",
 	"pluginType": "platform",
-	"headerDisplay": "Homebridge platform plugin for Eco and WION Wi-Fi modules and switches.<p><h1>No Configuration Required.</h1><p><p>This plugin allows you to remotely control the state of your Eco Plug. It allows you to set the on/off state. This plugin supports device auto discovery, and will scan the network for new devices every 60 seconds and add new devices.",
+	"headerDisplay": "Homebridge platform plugin for Eco and WION Wi-Fi modules and switches. This plugin allows you to remotely control the state of your Eco Plug. It allows you to set the on/off state. This plugin supports device auto discovery, and will scan the network for new devices every 60 seconds and add new devices.",
 	"singular": true,
 	"schema": {
 		"type": "object",
