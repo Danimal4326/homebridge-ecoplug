@@ -21,7 +21,7 @@ module.exports = function(homebridge) {
   UUIDGen = homebridge.hap.uuid;
   HAPServer = homebridge.hap.HAPServer;
 
-  homebridge.registerPlatform("homebridge-ecoplugs", "EcoPlug", EcoPlugPlatform);
+  homebridge.registerPlatform("homebridge-ecoplug", "EcoPlug", EcoPlugPlatform);
 }
 
 function EcoPlugPlatform(log, config, api) {
@@ -128,7 +128,7 @@ EcoPlugPlatform.prototype.addAccessory = function(data) {
 
     this.setService(accessory);
 
-    this.api.registerPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [accessory]);
+    this.api.registerPlatformAccessories("homebridge-ecoplug", "EcoPlug", [accessory]);
   } else {
     var accessory = accessories[data.id];
   }
@@ -207,7 +207,7 @@ EcoPlugPlatform.prototype.removeAccessory = function(accessory) {
   if (accessory) {
     var id = accessory.context.id;
     this.log("Removing EcoPlug: " + accessory.context.name);
-    this.api.unregisterPlatformAccessories("homebridge-ecoplugs", "EcoPlug", [accessory]);
+    this.api.unregisterPlatformAccessories("homebridge-ecoplug", "EcoPlug", [accessory]);
     delete accessories[id];
   }
 }
