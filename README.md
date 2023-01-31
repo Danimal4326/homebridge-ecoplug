@@ -1,5 +1,9 @@
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 
+## This plugin in now archived and read only.  No further changes will be made.
+
+
+
 # homebridge-ecoplug
 [Homebridge](https://github.com/nfarina/homebridge) platform plugin for Eco and WION Wi-Fi modules and switches
 
